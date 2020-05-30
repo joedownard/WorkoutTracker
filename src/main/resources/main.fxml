@@ -31,10 +31,6 @@
          <opaqueInsets>
             <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
          </opaqueInsets>
-         <columnConstraints>
-            <ColumnConstraints maxWidth="364.0" minWidth="10.0" prefWidth="355.0" />
-            <ColumnConstraints maxWidth="349.0" minWidth="10.0" prefWidth="142.0" />
-         </columnConstraints>
       </GridPane>
       <GridPane GridPane.columnIndex="1" GridPane.rowIndex="3">
         <columnConstraints>
