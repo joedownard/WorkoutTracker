@@ -1,3 +1,6 @@
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -8,21 +11,38 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainController {
 
+    @FXML private Button resetAllButton;
     @FXML private GridPane exerciseContainer;
     @FXML private Label upNextLabel;
 
     private ArrayList<Exercise> exerciseList = new ArrayList<>();
     private int maxSets;
+    private ArrayList<Label> labelList = new ArrayList<>();
 
     @FXML
     public void initialize () {
-        exerciseList.add(new Exercise("Pullups", "6 6 5 4 3"));
-        exerciseList.add(new Exercise("Bicep Curls", "20 20 20"));
-        exerciseList.add(new Exercise("DB Skullcrushers", "14 14 14"));
+        try {
+            readFromFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (exerciseList.isEmpty()) {
+            exerciseList.clear();
+            exerciseList.add(new Exercise("Pullups +8kg", "7 6 5 4 3"));
+            exerciseList.add(new Exercise("Push ups +8kg", "15 15 15 15"));
+            exerciseList.add(new Exercise("Bicep Curls", "20 20 20 20"));
+            exerciseList.add(new Exercise("DB Shoulder Press", "20 20 20 20"));
+            exerciseList.add(new Exercise("DB Skullcrushers", "15 15 15 15"));
+            exerciseList.add(new Exercise("Plank +8kg", "60 60 60 60"));
+            exerciseList.add(new Exercise("Ab roller", "10 10 10 10"));
+        }
         for (Exercise exercise : exerciseList) {
             if (exercise.getSets().size() > maxSets) maxSets = exercise.getSets().size();
         }
@@ -37,17 +57,29 @@ public class MainController {
             int numSets = exercise.getSets().size();
             for (int i = 0; i < numSets; i++) {
                 Label tempLabel = new Label(String.valueOf(exercise.getSets().get(i).reps));
-                tempLabel.setTextFill(Color.RED);
+                if (exercise.getSets().get(i).completed) {
+                    tempLabel.setTextFill(Color.GREEN);
+                } else {
+                    tempLabel.setTextFill(Color.RED);
+                }
                 tempLabel.setFont(new Font("Franklin Gothic Medium", 30));
+                int finalI = i;
                 tempLabel.setOnMouseClicked(event -> {
                     if (event.getSource() instanceof Label) {
+                        exercise.getSets().get(finalI).completed = !exercise.getSets().get(finalI).completed;
                         if (((Label) event.getSource()).getTextFill() == Color.RED) {
                             ((Label) event.getSource()).setTextFill(Color.GREEN);
                         } else {
                             ((Label) event.getSource()).setTextFill(Color.RED);
                         }
+                        try {
+                            writeToFile();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
+                labelList.add(tempLabel);
                 exerciseContainer.add(tempLabel, i+1, rowCounter);
             }
             Label tempLabel = new Label(exercise.getName());
@@ -77,4 +109,33 @@ public class MainController {
         exerciseContainer.getColumnConstraints().add(numCols-1, new ColumnConstraints(75));
     }
 
+    public void resetAllClicked(MouseEvent mouseEvent) {
+        for (Label l : labelList) {
+            l.setTextFill(Color.RED);
+        }
+        for (Exercise e : exerciseList) {
+            for (Set s : e.getSets()) {
+                s.completed = false;
+            }
+        }
+        try {
+            writeToFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeToFile () throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+
+        File directory = new File(System.getProperty("user.home") + "\\WorkoutTracker");
+        if (!directory.exists()) directory.mkdir();
+
+        objectMapper.writeValue(new File(System.getProperty("user.home") + "\\WorkoutTracker\\exerciseList.json"), exerciseList);
+    }
+
+    private void readFromFile () throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        exerciseList = objectMapper.readValue(new File(System.getProperty("user.home") + "\\WorkoutTracker\\exerciseList.json"), new TypeReference<ArrayList<Exercise>>(){});
+    }
 }

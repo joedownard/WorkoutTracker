@@ -6,6 +6,10 @@ public class Exercise {
     private ArrayList<Set> sets = new ArrayList<>();
 
 
+    public Exercise () {
+
+    }
+
     public Exercise(String name, ArrayList<Set> sets) {
         this.name = name;
         this.sets = sets;
